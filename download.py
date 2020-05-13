@@ -15,10 +15,12 @@ import requests
 
 from tqdm import tqdm
 
-logging.basicConfig(format='%(asctime)s %(message)s', filename='download.log', level=logging.INFO)
+logging.basicConfig(format='%(asctime)s %(message)s',
+                    filename='download.log', level=logging.INFO)
 
 # columns expected in the input csv file
 EXPECTED_COLUMNS = ("scene_id", "asset_type", "link")
+
 
 def parse_arguments():
     """
@@ -76,7 +78,8 @@ def download(link, file_name, folder_name):
 
     path = f"{folder_name}/{file_name}"
     if file_exists(path):
-        logging.info(f"File {path} not downloaded because it already exists. The link is {link}")
+        logging.info(
+            f"File {path} not downloaded because it already exists. The link is {link}")
         return
     create_folder_if_not_exist(folder_name)
 
@@ -106,7 +109,7 @@ def ingest_csv(csv_file_name, filter_dict):
     """
         Function to ingest csv file and filter it.
     """
-    
+
     # read the csv file
     try:
         df = pd.read_csv(csv_file_name)
@@ -116,13 +119,15 @@ def ingest_csv(csv_file_name, filter_dict):
     # check if necessary columns are in the input csv file
     missing_columns = set(EXPECTED_COLUMNS) - set(df.columns)
     if not len(missing_columns) == 0:
-        print(f"Some columns are missing in the input csv file. Missing columns are: {missing_columns}")
+        print(
+            f"Some columns are missing in the input csv file. Missing columns are: {missing_columns}")
         exit(1)
     empty = False
-    
+
     # filter rows based on input condition
     if filter_dict['key'] and filter_dict['value']:
-        df = filter_by(df=df, key=filter_dict['key'], value=filter_dict['value'])
+        df = filter_by(
+            df=df, key=filter_dict['key'], value=filter_dict['value'])
 
     if len(df) == 0:
         print("Either the input csv file had zero rows or the filter returned zero rows.")
@@ -137,8 +142,10 @@ def create_additional_columns(df):
 
     df["scene_type"] = df.scene_id.str.split("-").str[0]
     df["file_name"] = df.apply(lambda row: extract_file_name(row), axis=1)
-    df["folder_name"] = df.apply(lambda row: row["file_name"].rsplit('/', 1)[0], axis=1)
-    df["file_name"] = df.apply(lambda row: row["file_name"].rsplit('/', 1)[1], axis=1)
+    df["folder_name"] = df.apply(
+        lambda row: row["file_name"].rsplit('/', 1)[0], axis=1)
+    df["file_name"] = df.apply(
+        lambda row: row["file_name"].rsplit('/', 1)[1], axis=1)
 
     return df
 
@@ -156,9 +163,11 @@ def main(csv_file_name, download_folder_name, filter_dict):
         create_additional_columns(df)
         tqdm.pandas()
         #    download files from csv one row at a time
-        df.progress_apply(lambda row: download_row(row, download_folder_name), axis=1)
+        df.progress_apply(lambda row: download_row(
+            row, download_folder_name), axis=1)
 
 
 if __name__ == '__main__':
     csv_file_name, filter_column, filter_value, download_folder_name = parse_arguments()
-    main(csv_file_name, download_folder_name, {'key': filter_column, 'value': filter_value})
+    main(csv_file_name, download_folder_name, {
+         'key': filter_column, 'value': filter_value})
