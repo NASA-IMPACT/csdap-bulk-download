@@ -7,37 +7,18 @@ The expected columns are scene_id, asset_type, and links.
 """
 
 import argparse
+import logging
 import os
 import pandas as pd
 import re
 import requests
 
+from tqdm import tqdm
+
+logging.basicConfig(format='%(asctime)s %(message)s', filename='download.log', level=logging.INFO)
+
 # columns expected in the input csv file
 EXPECTED_COLUMNS = ("scene_id", "asset_type", "link")
-
-def parse_arguments():
-    """
-        python download.py input.csv --filtercolumn asset_type --filtervalue udm --downloadfolder downloads
-    """
-
-    parser = argparse.ArgumentParser(
-        description='This script allows for filtering the download csv by a desired scene or asset type. URL links for the selected data downloads are returned. The expected columns are scene_id, asset_type, and links.')
-    parser.add_argument('inputcsv', type=str,
-                        help='path to the input csv file')
-    parser.add_argument('--filtercolumn', type=str,
-                        help='column that you want to filter on.', choices=['scene_id', 'asset_type'])
-    parser.add_argument('--filtervalue', type=str,
-                        help='value to filter by')
-    parser.add_argument('--downloadfolder', type=str, default="downloads",
-                        help='name of the folder to download to')
-
-    args = parser.parse_args()
-    # Check either both or neither of filtercolumn and filtervalue have been passed
-    if len([x for x in (args.filtercolumn, args.filtervalue) if x is not None]) == 1:
-        parser.error('--filtercolumn and --filtervalue must be given together')
-
-    return args.inputcsv, args.filtercolumn, args.filtervalue, args.downloadfolder
-
 
 def parse_arguments():
     """
@@ -95,15 +76,13 @@ def download(link, file_name, folder_name):
 
     path = f"{folder_name}/{file_name}"
     if file_exists(path):
-        print(f"File {path} not downloaded because it already exist. The link is {link}")
+        logging.info(f"File {path} not downloaded because it already exists. The link is {link}")
         return
     create_folder_if_not_exist(folder_name)
-    try:
-        r = requests.get(link, allow_redirects=True)
-        open(os.path.join(folder_name, file_name), 'wb').write(r.content)
-        print(f"Link downloaded to {path}")
-    except Exception as e:
-        print(e)
+
+    r = requests.get(link, allow_redirects=True)
+    open(os.path.join(folder_name, file_name), 'wb').write(r.content)
+    logging.info(f"Link downloaded to {path}")
 
 
 def extract_file_name(row):
@@ -175,9 +154,9 @@ def main(csv_file_name, download_folder_name, filter_dict):
 
     if not empty:
         create_additional_columns(df)
-
+        tqdm.pandas()
         #    download files from csv one row at a time
-        df.apply(lambda row: download_row(row, download_folder_name), axis=1)
+        df.progress_apply(lambda row: download_row(row, download_folder_name), axis=1)
 
 
 if __name__ == '__main__':
