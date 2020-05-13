@@ -12,6 +12,32 @@ import pandas as pd
 import re
 import requests
 
+# columns expected in the input csv file
+EXPECTED_COLUMNS = ("scene_id", "asset_type", "link")
+
+def parse_arguments():
+    """
+        python download.py input.csv --filtercolumn asset_type --filtervalue udm --downloadfolder downloads
+    """
+
+    parser = argparse.ArgumentParser(
+        description='This script allows for filtering the download csv by a desired scene or asset type. URL links for the selected data downloads are returned. The expected columns are scene_id, asset_type, and links.')
+    parser.add_argument('inputcsv', type=str,
+                        help='path to the input csv file')
+    parser.add_argument('--filtercolumn', type=str,
+                        help='column that you want to filter on.', choices=['scene_id', 'asset_type'])
+    parser.add_argument('--filtervalue', type=str,
+                        help='value to filter by')
+    parser.add_argument('--downloadfolder', type=str, default="downloads",
+                        help='name of the folder to download to')
+
+    args = parser.parse_args()
+    # Check either both or neither of filtercolumn and filtervalue have been passed
+    if len([x for x in (args.filtercolumn, args.filtervalue) if x is not None]) == 1:
+        parser.error('--filtercolumn and --filtervalue must be given together')
+
+    return args.inputcsv, args.filtercolumn, args.filtervalue, args.downloadfolder
+
 
 def parse_arguments():
     """
@@ -101,15 +127,28 @@ def ingest_csv(csv_file_name, filter_dict):
     """
         Function to ingest csv file and filter it.
     """
-
-    df = pd.read_csv(csv_file_name)
-    if len(df) == 0:
+    
+    # read the csv file
+    try:
+        df = pd.read_csv(csv_file_name)
+    except pd.errors.EmptyDataError:
         print("The csv file was empty.")
+        exit(1)
+    # check if necessary columns are in the input csv file
+    missing_columns = set(EXPECTED_COLUMNS) - set(df.columns)
+    if not len(missing_columns) == 0:
+        print(f"Some columns are missing in the input csv file. Missing columns are: {missing_columns}")
+        exit(1)
+    empty = False
+    
+    # filter rows based on input condition
     if filter_dict['key'] and filter_dict['value']:
         df = filter_by(df=df, key=filter_dict['key'], value=filter_dict['value'])
-        if len(df) == 0:
-            print("The filter returned zero rows.")
-    return df
+
+    if len(df) == 0:
+        print("Either the input csv file had zero rows or the filter returned zero rows.")
+        empty = True
+    return df, empty
 
 
 def create_additional_columns(df):
@@ -118,9 +157,9 @@ def create_additional_columns(df):
     """
 
     df["scene_type"] = df.scene_id.str.split("-").str[0]
-    df['file_name'] = df.apply(lambda row: extract_file_name(row), axis=1)
-    df["folder_name"] = df.apply(lambda row: row['file_name'].rsplit('/', 1)[0], axis=1)
-    df["file_name"] = df.apply(lambda row: row['file_name'].rsplit('/', 1)[1], axis=1)
+    df["file_name"] = df.apply(lambda row: extract_file_name(row), axis=1)
+    df["folder_name"] = df.apply(lambda row: row["file_name"].rsplit('/', 1)[0], axis=1)
+    df["file_name"] = df.apply(lambda row: row["file_name"].rsplit('/', 1)[1], axis=1)
 
     return df
 
@@ -132,14 +171,13 @@ def main(csv_file_name, download_folder_name, filter_dict):
 
     create_folder_if_not_exist(download_folder_name)
 
-    df = ingest_csv(csv_file_name, filter_dict)
+    df, empty = ingest_csv(csv_file_name, filter_dict)
 
-    create_additional_columns(df)
+    if not empty:
+        create_additional_columns(df)
 
-    #    download files from csv one row at a time
-    df.apply(lambda row: download_row(row, download_folder_name), axis=1)
-
-    return df
+        #    download files from csv one row at a time
+        df.apply(lambda row: download_row(row, download_folder_name), axis=1)
 
 
 if __name__ == '__main__':
