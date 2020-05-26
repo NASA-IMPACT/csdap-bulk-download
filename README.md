@@ -10,6 +10,16 @@ Note: Download links can only be downloaded once. However, user downloads are lo
 
 argparse, logging, os, pandas, re, requests, tqdm
 
+## Arguments
+
+1. inputcsv - This is the path to the input csv file.
+
+2. filtercolumn - This is the column in the csv file that you want to filter by.
+
+3. filtervalue - This is the value in the filtercolumn that you want to filter by.
+
+4. downloadfolder - The name of the folder to download the files to.
+
 ## Filter for Desired Scenes
 
 Users can filter the .csv file by scene_id or by asset_type. This is accomplished by providing two arguments: filtercolumn and filtervalue. The two options for the filtercolumn argument is scene_id or asset_type. The second argument, filtervalue, corresponds to the desired value of the filtercolumn. For example, providing `--filtercolumn asset_type --filtervalue udm` filters the .csv by the udm asset.  
@@ -18,11 +28,11 @@ Users can filter the .csv file by scene_id or by asset_type. This is accomplishe
 
 1. Download the csdap_bulk_download repository to your local machine.
 
-2. Save the data order .csv file to the same directory as the csdap_bulk_download repository. 
+2. Save the data order .csv file to the same directory as the csdap_bulk_download repository. Provide the .csv as the first argument.
 
-3. Determine if scenes will be filtered (see above).
+3. Determine if scenes will be filtered (see above). Note this is arguments two and three.
 
-4. Determine the name of the folder that the files will be downloaded to (default name is "Downloads"). This name should be provided as the last argument when running the script.
+4. Determine the name of the folder that the files will be downloaded to (default name is "Downloads"). This name should be provided as the fourth argument when running the script.
 
 5. Navigate to necessary directory:  
 `$python download.py --inputcsv --filtercolumn --filtervalue --downloadfolder `
