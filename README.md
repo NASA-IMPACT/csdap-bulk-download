@@ -24,6 +24,7 @@ Users can filter the .csv file by scene_id or by asset_type. This is accomplishe
 
 4. Determine the name of the folder that the files will be downloaded to (default name is "Downloads"). This name should be provided as the last argument when running the script.
 
-5. Navigate to necessary directory:  `$python download.py --inputcsv --filtercolumn --filtervalue --downloadfolder `
+5. Navigate to necessary directory:  
+`$python download.py --inputcsv --filtercolumn --filtervalue --downloadfolder `
 
 
