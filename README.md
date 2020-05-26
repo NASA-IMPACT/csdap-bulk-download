@@ -10,12 +10,16 @@ Note: Download links can only be downloaded once. However, downloads are logged 
 
 argparse, logging, os, pandas, re, requests, tqdm
 
+## Filter for Desired Scenes
+
+Users can filter the .csv file by scene id or by asset type. This is accomplished by providing two arguments: filter_column and filter_value. The filter_column argument should be either scene_id or asset_type. The second argument, filter_value, corresponds to the desired value of the filter_column. For example, providing `input.csv --filtercolumn asset_type --filtervalue udm` filters the input.csv by the udm asset.  
+
 ## Running the Script
 
 1. Download the csdap_bulk_download repository to your local machine.
 
 2. Save the .csv file to the same directory as the csdap_bulk_download repository. 
 
-3. Navigate to necessary directory:  `python download.py`
+3. Navigate to necessary directory:  `python download.py input.csv`
 
 
