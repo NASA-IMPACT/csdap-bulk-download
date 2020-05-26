@@ -6,7 +6,7 @@ Authorized users submit data requests through the Smallsat Data Explorer (SDX) f
 
 Note: Download links can only be downloaded once. However, downloads are logged so that if there is a failure during download (e.g., loss of internet), executing this script again start downloading files that were not previously downloaded. 
 
-### Required Libraries
+## Required Libraries
 
 argparse, logging, os, pandas, re, requests, tqdm
 
