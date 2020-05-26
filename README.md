@@ -16,6 +16,6 @@ argparse, logging, os, pandas, re, requests, tqdm
 
 2. Save the .csv file to the same directory as the csdap_bulk_download repository. 
 
-3. Navigate to necessary directory:  'python download.py'
+3. Navigate to necessary directory:  `python download.py`
 
 
