@@ -1,3 +1,7 @@
+argparse
+logging
 pandas
+os
+re
 requests
 tqdm
