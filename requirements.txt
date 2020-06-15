@@ -1,7 +1,16 @@
 argparse
+csv
+datetime
+getpass
 logging
 pandas
+progressbar
 os
 re
 requests
+requests.auth
+sys
+shutil
+time
 tqdm
+urlib.parse
