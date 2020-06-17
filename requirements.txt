@@ -9,7 +9,6 @@ re
 requests
 requests.auth
 sys
-shutil
 time
 tqdm
 urlib.parse
