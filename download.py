@@ -9,8 +9,7 @@ following assumptions:
     - order_id
     - scene_id
     - asset_type
--Filter options???
-
+This script allows for filtering the assets csv file by a desired scene or asset type. 
 This script will look for Earthdata Login authentication credentials in the
 following environment variables:
     - EDL_USER
@@ -22,22 +21,21 @@ NOTE: a user is only granted access to download each file once.
 
 import argparse
 import csv
-import time
-from datetime import datetime
-import shutil
 import logging
 import os
-from progressbar import ProgressBar
 import pandas as pd
 import re
-import sys
-from urllib.parse import parse_qs, urlparse
-from getpass import getuser, getpass
-from tqdm import tqdm
-from concurrent.futures import ThreadPoolExecutor as PoolExecutor
 import requests
-from requests.auth import HTTPBasicAuth
+import shutil
+import sys
+import time
 
+from datetime import datetime
+from getpass import getuser, getpass
+from progressbar import ProgressBar
+from requests.auth import HTTPBasicAuth
+from tqdm import tqdm
+from urllib.parse import parse_qs, urlparse
 
 logger = logging.getLogger()
 logging.basicConfig(
@@ -159,9 +157,8 @@ def ingest_csv(csv_file_name, filter_dict):
     return df, empty
 
 
-def main(csv_file_name, download_folder_name, filter_dict):
+def main_filter(csv_file_name, download_folder_name, filter_dict):
     """
-        Main function that drives the code.
             Parameters:
                 csv_file_name (str): name of the ingested csv
                 download_folder_name (str): folder to download all of the files to
@@ -261,15 +258,15 @@ def download_file(order_id, scene_id, asset_type, token, **kwargs):
         logger.info(f"Wrote {identifier} to {filepath}")
 
 
-def lambda_handler(event, context):
-    volumes = VolumesParallel()
-    _start = time.time()
-    total = volumes.total_size()
+#def lambda_handler(event, context):
+    #volumes = VolumesParallel()
+    #_start = time.time()
+    #total = volumes.total_size()
 
 
 if __name__ == "__main__":
     csv_file_name, filter_column, filter_value, download_folder_name = parse_arguments()
-    main(csv_file_name, download_folder_name, {
+    main_filter(csv_file_name, download_folder_name, {
          'key': filter_column, 'value': filter_value})
 
     [username, password] = get_edl_credentials()
