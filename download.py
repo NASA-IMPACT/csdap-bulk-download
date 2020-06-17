@@ -26,7 +26,6 @@ import os
 import pandas as pd
 import re
 import requests
-import shutil
 import sys
 
 from datetime import datetime
