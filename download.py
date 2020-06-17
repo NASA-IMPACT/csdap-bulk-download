@@ -28,12 +28,11 @@ import re
 import requests
 import shutil
 import sys
-import time
 
 from datetime import datetime
 from getpass import getuser, getpass
-from progressbar import ProgressBar
 from requests.auth import HTTPBasicAuth
+from time import time
 from tqdm import tqdm
 from urllib.parse import parse_qs, urlparse
 
@@ -270,11 +269,14 @@ if __name__ == "__main__":
     main_filter(csv_file_name, download_folder_name, {
          'key': filter_column, 'value': filter_value})
 
+    start = time()
     [username, password] = get_edl_credentials()
     token = get_auth_token(username, password)
+    
     with open("filtered_order.csv") as csv_file:
         for row in csv.DictReader(csv_file):
             download_file(token=token, **row)
+            print(f"Time to download: {time() - start}")
             for i in tqdm(range(1)):
                 pass
 
