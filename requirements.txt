@@ -4,7 +4,6 @@ datetime
 getpass
 logging
 pandas
-progressbar
 os
 re
 requests
