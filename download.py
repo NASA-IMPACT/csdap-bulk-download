@@ -159,6 +159,7 @@ def ingest_csv(csv_file_name, filter_dict):
 
 def main_filter(csv_file_name, download_folder_name, filter_dict):
     """
+        Main function that drives the filtering of the assets csv file.
             Parameters:
                 csv_file_name (str): name of the ingested csv
                 download_folder_name (str): folder to download all of the files to
