@@ -8,7 +8,7 @@ Note: Download links can only be downloaded once. However, user downloads are lo
 
 ## Required Libraries
 
-argparse, csv, datetime, getpass, logging, os, pandas, re, requests, requests.auth, shutil, sys, time, tqdm, urlib.parse
+argparse, csv, datetime, getpass, logging, os, pandas, re, requests, requests.auth, sys, time, tqdm, urlib.parse
 
 ## Arguments
 
