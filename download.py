@@ -59,7 +59,7 @@ def parse_arguments():
     """
 
     now = datetime.now()
-    datetimestamp = now.strftime("%m%d%Y-%H:%M")
+    datetimestamp = now.strftime("%m%d%Y-%H-%M")
     default_folder_name = 'Order_Downloads_'+datetimestamp
     parser = argparse.ArgumentParser(
         description='This script allows for filtering the download csv by a desired scene or asset type. URL links for the selected data downloads are returned. The expected columns are scene_id, asset_type, and links.')
