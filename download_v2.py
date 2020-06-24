@@ -24,7 +24,6 @@ import argparse
 import csv
 import time
 from datetime import datetime
-import shutil
 import logging
 import json
 import os
@@ -34,6 +33,7 @@ import sys
 from urllib.parse import parse_qs, urlparse
 from getpass import getuser, getpass
 from tqdm import tqdm
+from multiprocessing import Pool
 from multiprocessing.pool import ThreadPool
 from concurrent.futures import ThreadPoolExecutor
 import threading
@@ -179,7 +179,7 @@ def main(csv_file_name, download_folder_name, filter_dict):
     if not empty:
 
         os.chdir(download_folder_name)
-        filtered_csv_file = df.to_csv("filtered_order.csv", index=False)
+        filtered_csv_file = df.to_csv("download_files_order.csv", index=False)
 
 
 def get_edl_credentials():
@@ -279,15 +279,17 @@ if __name__ == "__main__":
     [username, password] = get_edl_credentials()
     token = get_auth_token(username, password)
 
-    # def new():
-    # download_file(token=token, **row)
+    def parallel_downloader(row):
+        download_file(token=token, **row)
+        for i in tqdm(range(1)):
+            pass
 
-    with open("filtered_order.csv") as csv_file:
-        for row in csv.DictReader(csv_file):
-            download_file(token=token, **row)
-            # ThreadPool(5).imap_unordered(new, file_list)
+    with open("download_files_order.csv") as csv_file:
+        rows = list(csv.DictReader(csv_file))
+        with Pool(5) as p:
+            p.map(parallel_downloader, rows)
             print(f"Time to download: {time() - start}")
-            for i in tqdm(range(1)):
-                pass
+            # for i in tqdm(range(1)):
+            # pass
 
-                logger.info("Downloads complete.")
+            logger.info("Downloads complete.")
