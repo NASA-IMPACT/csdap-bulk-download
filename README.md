@@ -30,7 +30,7 @@ Users can filter the .csv file by scene_id or by asset_type. This is accomplishe
 
 2. Determine if scenes will be filtered (see above). Note this is arguments two and three.
 
-3. Determine the name of the folder that the files will be downloaded to (default name is *Order_Downloads_mmddyyyy-HH:MM*  <sup id="a1">[1](#f1)</sup> ). 
+3. Determine the name of the folder that the files will be downloaded to (default name is *Order_Downloads_mmddyyyy-HHMM*  <sup id="a1">[1](#f1)</sup> ). 
 
 4. Save the data order.csv file to the same directory as the csdap_bulk_download repository. This argument must be the last argument.
 
