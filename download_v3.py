@@ -9,7 +9,7 @@ following assumptions:
     - order_id
     - scene_id
     - asset_type
--Filter options: the csv file can be filtered to only download a subset of files based on scene_id or asset_type.
+-A user has the option to filter the csv file and only download a subset of files based on scene_id or asset_type.
 
 This script will look for Earthdata Login authentication credentials in the
 following environment variables:
@@ -28,25 +28,24 @@ Running the script: Arguments
 
 import argparse
 import csv
-import time
 from datetime import datetime
-import logging
 import json
+import logging
 import os
 import pandas as pd
 import re
 import sys
-from urllib.parse import parse_qs, urlparse
+import time
+
 from getpass import getuser, getpass
-from tqdm import tqdm
 from multiprocessing import Pool
 from multiprocessing.pool import ThreadPool
-from concurrent.futures import ThreadPoolExecutor
-import threading
 import requests
 from requests.auth import HTTPBasicAuth
+import threading
 from time import time
-
+from tqdm import tqdm
+from urllib.parse import parse_qs, urlparse
 
 logger = logging.getLogger()
 logging.basicConfig(
