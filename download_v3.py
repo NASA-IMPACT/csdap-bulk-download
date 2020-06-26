@@ -9,7 +9,7 @@ following assumptions:
     - order_id
     - scene_id
     - asset_type
--Filter options???
+-Filter options: the csv file can be filtered to only download a subset of files based on scene_id or asset_type.
 
 This script will look for Earthdata Login authentication credentials in the
 following environment variables:
@@ -18,6 +18,12 @@ following environment variables:
 If not found, the user will be prompted for credentials.
 
 NOTE: a user is only granted access to download each file once.
+
+Running the script: Arguments
+-inputcsv - The is the path to the input csv file (i.e., orders.csv)
+-filtercolumn (optional) - This is the column in the csv file that you want to filter by.
+-filtervalue (optional) - This is the value in the filtercolumn that you want to filter by.
+-downloadfolder (optional) - The name of the folder to download the files to (default name is Order_Downloads_mmddyyyy-HHMM
 """
 
 import argparse
