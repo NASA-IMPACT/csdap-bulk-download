@@ -254,12 +254,12 @@ def download_file(order_id, scene_id, asset_type, token, **kwargs):
 
     # Download
     logger.info(f"Downloading {identifier}...")
-    with requests.get(
+    response = requests.get(
         f"{CSDAP_API}/v1/download/{identifier}",
         stream=True,
         headers=dict(authorization=f"Bearer {token}"),
-    ) as response:
-        response.raise_for_status()
+    )
+    response.raise_for_status()
 
     # Determine filename
     filename = asset_type
