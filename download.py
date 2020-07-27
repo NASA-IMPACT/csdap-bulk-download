@@ -230,8 +230,14 @@ def get_auth_token(username, password):
         302,
         307,
     ), f"Expected redirect, got {response.status_code}"
-    querystring = urlparse(response.headers["Location"]).query
-    [code] = parse_qs(querystring)["code"]
+
+    querystring = parse_qs(urlparse(response.headers["Location"]).query)
+    if querystring.get('error'):
+        err_msg = querystring['error_msg']
+        logger.error(f"Failed to authenticate: {err_msg}")
+        exit(1)
+
+    code = querystring['code']
 
     # Exchange code for token
     logger.info("Exchanging authorization code for access token...")
