@@ -20,10 +20,10 @@ If not found, the user will be prompted for credentials.
 NOTE: a user is only granted access to download each file once.
 
 Running the script: Arguments
--inputcsv - The is the path to the input csv file (i.e., orders.csv)
--filtercolumn (optional) - This is the column in the csv file that you want to filter by.
--filtervalue (optional) - This is the value in the filtercolumn that you want to filter by.
--downloadfolder (optional) - The name of the folder to download the files to (default name is Order_Downloads_mmddyyyy-HHMM
+- inputcsv: The is the path to the input csv file (i.e. orders.csv)
+- filtercolumn (optional): This is the column in the csv file that you want to filter by.
+- filtervalue (optional): This is the value in the filtercolumn that you want to filter by.
+- downloadfolder (optional): The name of the folder to download the files to (default name is Order_Downloads_mmddyyyy-HHMM
 """
 
 import argparse
@@ -33,7 +33,6 @@ from datetime import datetime
 import logging
 import os
 import re
-import sys
 import time
 from time import time
 import traceback
@@ -43,7 +42,6 @@ from getpass import getuser, getpass
 import pandas as pd
 import requests
 from requests.auth import HTTPBasicAuth
-from tqdm import tqdm
 
 
 logger = logging.getLogger()
@@ -275,10 +273,8 @@ def download_file(order_id, scene_id, asset_type, token, **kwargs):
     with open(filepath, "wb") as f:
         for chunk in response.iter_content(chunk_size=8192):
             f.write(chunk)
-            print(".", end="", file=sys.stderr, flush=True)
-            print()
 
-            logger.info(f"Wrote {identifier} to {filepath}")
+    return filepath
 
 
 if __name__ == "__main__":
@@ -293,25 +289,19 @@ if __name__ == "__main__":
     [username, password] = get_edl_credentials()
     token = get_auth_token(username, password)
 
-    def parallel_downloader(row):
-        download_file(token=token, **row)
-        for i in tqdm(range(1)):
-            pass
-
     concurrency = 5
     with open("download_files_order.csv") as csv_file:
         rows = csv.DictReader(csv_file)
         with concurrent.futures.ThreadPoolExecutor(max_workers=concurrency) as executor:
             future_to_row = {
-                executor.submit(parallel_downloader, row): row for row in rows
+                executor.submit(download_file, **row, token=token): row for row in rows
             }
             for future in concurrent.futures.as_completed(future_to_row):
                 row = future_to_row[future]
                 try:
-                    data = future.result()
+                    logger.info(f"Wrote {future.result()}")
                 except Exception as exc:
                     logger.error('%r generated an exception: %s' % (row, exc))
                     traceback.print_exc()
-                else:
-                    logger.info(f"Downloaded {row}")
+
     logger.info(f"Time to download: {time() - start}")
