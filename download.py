@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 """
 This is a simple script to download order assets from the CSDAP. It makes the
 following assumptions:
