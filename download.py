@@ -20,32 +20,28 @@ If not found, the user will be prompted for credentials.
 NOTE: a user is only granted access to download each file once.
 
 Running the script: Arguments
--inputcsv - The is the path to the input csv file (i.e., orders.csv)
--filtercolumn (optional) - This is the column in the csv file that you want to filter by.
--filtervalue (optional) - This is the value in the filtercolumn that you want to filter by.
--downloadfolder (optional) - The name of the folder to download the files to (default name is Order_Downloads_mmddyyyy-HHMM
+- inputcsv: The is the path to the input csv file (i.e. orders.csv)
+- filtercolumn (optional): This is the column in the csv file that you want to filter by.
+- filtervalue (optional): This is the value in the filtercolumn that you want to filter by.
+- downloadfolder (optional): The name of the folder to download the files to (default name is Order_Downloads_mmddyyyy-HHMM
 """
 
 import argparse
+import concurrent.futures
 import csv
 from datetime import datetime
-import json
 import logging
 import os
-import pandas as pd
 import re
-import requests
-import sys
 import time
-import threading
-
-from getpass import getuser, getpass
-from multiprocessing import Pool
-from multiprocessing.pool import ThreadPool
-from requests.auth import HTTPBasicAuth
 from time import time
-from tqdm import tqdm
+import traceback
 from urllib.parse import parse_qs, urlparse
+from getpass import getuser, getpass
+
+import pandas as pd
+import requests
+from requests.auth import HTTPBasicAuth
 
 
 logger = logging.getLogger()
@@ -73,22 +69,30 @@ def parse_arguments():
 
     now = datetime.now()
     datetimestamp = now.strftime("%m%d%Y-%H:%M")
-    default_folder_name = 'Order_Downloads_'+datetimestamp
+    default_folder_name = "Order_Downloads_" + datetimestamp
     parser = argparse.ArgumentParser(
-        description='This script allows for filtering the download csv by a desired scene or asset type. URL links for the selected data downloads are returned. The expected columns are scene_id, asset_type, and links.')
-    parser.add_argument('inputcsv', type=str,
-                        help='path to the input csv file')
-    parser.add_argument('--filtercolumn', type=str,
-                        help='column that you want to filter on.', choices=['scene_id', 'asset_type'])
-    parser.add_argument('--filtervalue', type=str,
-                        help='value to filter by')
-    parser.add_argument('--downloadfolder', type=str, default=default_folder_name,
-                        help='name of the folder to download to')
+        description="This script allows for filtering the download csv by a desired scene or asset type. URL links for the selected data downloads are returned. The expected columns are scene_id, asset_type, and links."
+    )
+    parser.add_argument("inputcsv", type=str,
+                        help="path to the input csv file")
+    parser.add_argument(
+        "--filtercolumn",
+        type=str,
+        help="column that you want to filter on.",
+        choices=["scene_id", "asset_type"],
+    )
+    parser.add_argument("--filtervalue", type=str, help="value to filter by")
+    parser.add_argument(
+        "--downloadfolder",
+        type=str,
+        default=default_folder_name,
+        help="name of the folder to download to",
+    )
 
     args = parser.parse_args()
     # Check either both or neither of filtercolumn and filtervalue have been passed
     if len([x for x in (args.filtercolumn, args.filtervalue) if x is not None]) == 1:
-        parser.error('--filtercolumn and --filtervalue must be given together')
+        parser.error("--filtercolumn and --filtervalue must be given together")
 
     return args.inputcsv, args.filtercolumn, args.filtervalue, args.downloadfolder
 
@@ -153,17 +157,20 @@ def ingest_csv(csv_file_name, filter_dict):
     missing_columns = set(EXPECTED_COLUMNS) - set(df.columns)
     if not len(missing_columns) == 0:
         print(
-            f"Some columns are missing in the input csv file. Missing columns are: {missing_columns}")
+            f"Some columns are missing in the input csv file. Missing columns are: {missing_columns}"
+        )
         exit(1)
     empty = False
 
     # filter rows based on input condition
-    if filter_dict['key'] and filter_dict['value']:
+    if filter_dict["key"] and filter_dict["value"]:
         df = filter_by(
-            df=df, key=filter_dict['key'], value=filter_dict['value'])
+            df=df, key=filter_dict["key"], value=filter_dict["value"])
 
     if len(df) == 0:
-        print("Either the input csv file had zero rows or the filter returned zero rows.")
+        print(
+            "Either the input csv file had zero rows or the filter returned zero rows."
+        )
         empty = True
     return df, empty
 
@@ -223,8 +230,14 @@ def get_auth_token(username, password):
         302,
         307,
     ), f"Expected redirect, got {response.status_code}"
-    querystring = urlparse(response.headers["Location"]).query
-    [code] = parse_qs(querystring)["code"]
+
+    querystring = parse_qs(urlparse(response.headers["Location"]).query)
+    if querystring.get('error'):
+        err_msg = querystring['error_msg']
+        logger.error(f"Failed to authenticate: {err_msg}")
+        exit(1)
+
+    code = querystring['code']
 
     # Exchange code for token
     logger.info("Exchanging authorization code for access token...")
@@ -241,59 +254,60 @@ def download_file(order_id, scene_id, asset_type, token, **kwargs):
     # Prep outpath
     outpath = os.path.join(os.path.dirname(
         os.path.abspath(__file__)), identifier)
-    print('==================================')
-    # print(download_folder_name)
-    print(identifier)
-    print(outpath)
-    print('==================================')
     os.makedirs(outpath, exist_ok=True)
 
     # Download
     logger.info(f"Downloading {identifier}...")
-    with requests.get(
+    response = requests.get(
         f"{CSDAP_API}/v1/download/{identifier}",
         stream=True,
         headers=dict(authorization=f"Bearer {token}"),
-    ) as response:
-        response.raise_for_status()
+    )
+    response.raise_for_status()
 
     # Determine filename
     filename = asset_type
     disposition = response.headers.get("Content-Disposition")
+    logger.info(f'headers {response.headers}')
     if disposition:
-        filename = re.findall("filename=(.+)", disposition)[0]
-        print("this is the files name:" + filename)
-        print(disposition)
-        # Write to local disk
+        disposition_filename = re.findall("filename=(.+)", disposition)
+        if disposition_filename:
+            filename = disposition_filename[0]
 
-        filepath = os.path.join(outpath, filename)
-        with open(filepath, "wb") as f:
-            for chunk in response.iter_content(chunk_size=8192):
-                f.write(chunk)
-                print(".", end="", file=sys.stderr, flush=True)
-                print()
+    # Write to local disk
+    filepath = os.path.join(outpath, filename)
+    with open(filepath, "wb") as f:
+        for chunk in response.iter_content(chunk_size=8192):
+            f.write(chunk)
 
-                logger.info(f"Wrote {identifier} to {filepath}")
+    return filepath
 
 
 if __name__ == "__main__":
     csv_file_name, filter_column, filter_value, download_folder_name = parse_arguments()
-    main(csv_file_name, download_folder_name, {
-         'key': filter_column, 'value': filter_value})
+    main(
+        csv_file_name,
+        download_folder_name,
+        {"key": filter_column, "value": filter_value},
+    )
 
     start = time()
     [username, password] = get_edl_credentials()
     token = get_auth_token(username, password)
 
-    def parallel_downloader(row):
-        download_file(token=token, **row)
-        for i in tqdm(range(1)):
-            pass
-
+    concurrency = 5
     with open("download_files_order.csv") as csv_file:
-        rows = list(csv.DictReader(csv_file))
-        with Pool(5) as p:
-            p.map(parallel_downloader, rows)
-            print(f"Time to download: {time() - start}")
+        rows = csv.DictReader(csv_file)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=concurrency) as executor:
+            future_to_row = {
+                executor.submit(download_file, **row, token=token): row for row in rows
+            }
+            for future in concurrent.futures.as_completed(future_to_row):
+                row = future_to_row[future]
+                try:
+                    logger.info(f"Wrote {future.result()}")
+                except Exception as exc:
+                    logger.error('%r generated an exception: %s' % (row, exc))
+                    traceback.print_exc()
 
-            logger.info("Downloads complete.")
+    logger.info(f"Time to download: {time() - start}")
