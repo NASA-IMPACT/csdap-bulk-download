@@ -4,7 +4,7 @@ This is a simple script to download order assets from the CSDAP. It makes the
 following assumptions:
 - Python version >=3.6
 - Requests module is installed (https://requests.readthedocs.io/)
-- Script is called with path to Assets CSV (e.g. "python csdap.py assets.csv")
+- Script is called with path to Assets CSV (e.g. "python download.py assets.csv")
 - the Assets CSV contains the following columns:
     - order_id
     - scene_id
