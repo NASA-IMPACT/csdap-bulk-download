@@ -295,7 +295,7 @@ if __name__ == "__main__":
     [username, password] = get_edl_credentials()
     token = get_auth_token(username, password)
 
-    concurrency = 5
+    concurrency = 1
     with open("download_files_order.csv") as csv_file:
         rows = csv.DictReader(csv_file)
         with concurrent.futures.ThreadPoolExecutor(max_workers=concurrency) as executor:
