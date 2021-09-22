@@ -55,3 +55,12 @@ This will download all files with *asset_type: basic_analytic_dn* and save in a 
 
 
 <b id="f1">1</b> mm, dd, yyyy, HH and MM stand for current month, date, year, hour and minute respectively. [↩](#a1)
+
+
+## Development
+
+Install into a virtual environment:
+
+```sh
+pip install -e .
+```

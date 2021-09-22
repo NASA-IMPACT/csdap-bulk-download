@@ -49,9 +49,9 @@ logging.basicConfig(
     format="%(asctime)s:%(levelname)s:%(message)s", level=logging.INFO)
 
 
-CSDAP_ROOT = "https://csdap.earthdata.nasa.gov"
-CSDAP_API = f"{CSDAP_ROOT}/api"
-EDL_ROOT = "https://urs.earthdata.nasa.gov"
+# CSDAP_ROOT = "https://csdap.earthdata.nasa.gov"
+# CSDAP_API = f"{CSDAP_ROOT}/api"
+# EDL_ROOT = "https://urs.earthdata.nasa.gov"
 
 # columns expected in the input csv file
 EXPECTED_COLUMNS = ("order_id", "scene_id", "asset_type")
@@ -195,92 +195,92 @@ def main(csv_file_name, download_folder_name, filter_dict):
         filtered_csv_file = df.to_csv("download_files_order.csv", index=False)
 
 
-def get_edl_credentials():
-    username = (
-        os.environ.get("EDL_USER") or input(
-            f"Username ({getuser()}): ") or getuser()
-    )
-    password = os.environ.get("EDL_PASS") or getpass()
-    return username, password
+# def get_edl_credentials():
+#     username = (
+#         os.environ.get("EDL_USER") or input(
+#             f"Username ({getuser()}): ") or getuser()
+#     )
+#     password = os.environ.get("EDL_PASS") or getpass()
+#     return username, password
 
 
-def get_auth_token(username, password):
-    CSDAP_AUTH_ENDPOINT = f"{CSDAP_API}/v1/auth"
+# def get_auth_token(username, password):
+#     CSDAP_AUTH_ENDPOINT = f"{CSDAP_API}/v1/auth"
 
-    # Get URL to EDL
-    response = requests.get(
-        f"{CSDAP_AUTH_ENDPOINT}/",
-        params=dict(redirect_uri="script"),
-        allow_redirects=False,
-    )
-    assert response.status_code in (
-        302,
-        307,
-    ), f"Expected redirect, got {response.status_code}"
-    edl_url = response.headers["Location"]
-    assert edl_url.startswith(f"{EDL_ROOT}/oauth/authorize")
+#     # Get URL to EDL
+#     response = requests.get(
+#         f"{CSDAP_AUTH_ENDPOINT}/",
+#         params=dict(redirect_uri="script"),
+#         allow_redirects=False,
+#     )
+#     assert response.status_code in (
+#         302,
+#         307,
+#     ), f"Expected redirect, got {response.status_code}"
+#     edl_url = response.headers["Location"]
+#     assert edl_url.startswith(f"{EDL_ROOT}/oauth/authorize")
 
-    # Authenticate with EDL
-    logger.info("Authenticating with Earthdata Login...")
-    response = requests.get(
-        edl_url, auth=HTTPBasicAuth(username, password), allow_redirects=False,
-    )
-    response.raise_for_status()
-    assert response.status_code in (
-        302,
-        307,
-    ), f"Expected redirect, got {response.status_code}"
+#     # Authenticate with EDL
+#     logger.info("Authenticating with Earthdata Login...")
+#     response = requests.get(
+#         edl_url, auth=HTTPBasicAuth(username, password), allow_redirects=False,
+#     )
+#     response.raise_for_status()
+#     assert response.status_code in (
+#         302,
+#         307,
+#     ), f"Expected redirect, got {response.status_code}"
 
-    querystring = parse_qs(urlparse(response.headers["Location"]).query)
-    if querystring.get('error'):
-        err_msg = querystring['error_msg']
-        logger.error(f"Failed to authenticate: {err_msg}")
-        exit(1)
+#     querystring = parse_qs(urlparse(response.headers["Location"]).query)
+#     if querystring.get('error'):
+#         err_msg = querystring['error_msg']
+#         logger.error(f"Failed to authenticate: {err_msg}")
+#         exit(1)
 
-    code = querystring['code']
+#     code = querystring['code']
 
-    # Exchange code for token
-    logger.info("Exchanging authorization code for access token...")
-    response = requests.post(
-        f"{CSDAP_AUTH_ENDPOINT}/token", data=dict(code=code))
-    response.raise_for_status()
-    token = response.json()["access_token"]
-    return token
+#     # Exchange code for token
+#     logger.info("Exchanging authorization code for access token...")
+#     response = requests.post(
+#         f"{CSDAP_AUTH_ENDPOINT}/token", data=dict(code=code))
+#     response.raise_for_status()
+#     token = response.json()["access_token"]
+#     return token
 
 
-def download_file(order_id, scene_id, asset_type, token, **kwargs):
-    identifier = f"{order_id}/{scene_id}/{asset_type}"
+# def download_file(order_id, scene_id, asset_type, token, **kwargs):
+#     identifier = f"{order_id}/{scene_id}/{asset_type}"
 
-    # Prep outpath
-    outpath = os.path.join(os.path.dirname(
-        os.path.abspath(__file__)), identifier)
-    os.makedirs(outpath, exist_ok=True)
+#     # Prep outpath
+#     outpath = os.path.join(os.path.dirname(
+#         os.path.abspath(__file__)), identifier)
+#     os.makedirs(outpath, exist_ok=True)
 
-    # Download
-    logger.info(f"Downloading {identifier}...")
-    response = requests.get(
-        f"{CSDAP_API}/v1/download/{identifier}",
-        stream=True,
-        headers=dict(authorization=f"Bearer {token}"),
-    )
-    response.raise_for_status()
+#     # Download
+#     logger.info(f"Downloading {identifier}...")
+#     response = requests.get(
+#         f"{CSDAP_API}/v1/download/{identifier}",
+#         stream=True,
+#         headers=dict(authorization=f"Bearer {token}"),
+#     )
+#     response.raise_for_status()
 
-    # Determine filename
-    filename = asset_type
-    disposition = response.headers.get("Content-Disposition")
-    logger.info(f'headers {response.headers}')
-    if disposition:
-        disposition_filename = re.findall("filename=(.+)", disposition)
-        if disposition_filename:
-            filename = disposition_filename[0]
+#     # Determine filename
+#     filename = asset_type
+#     disposition = response.headers.get("Content-Disposition")
+#     logger.info(f'headers {response.headers}')
+#     if disposition:
+#         disposition_filename = re.findall("filename=(.+)", disposition)
+#         if disposition_filename:
+#             filename = disposition_filename[0]
 
-    # Write to local disk
-    filepath = os.path.join(outpath, filename)
-    with open(filepath, "wb") as f:
-        for chunk in response.iter_content(chunk_size=8192):
-            f.write(chunk)
+#     # Write to local disk
+#     filepath = os.path.join(outpath, filename)
+#     with open(filepath, "wb") as f:
+#         for chunk in response.iter_content(chunk_size=8192):
+#             f.write(chunk)
 
-    return filepath
+#     return filepath
 
 
 if __name__ == "__main__":
