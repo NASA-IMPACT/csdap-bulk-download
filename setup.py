@@ -13,7 +13,7 @@ setuptools.setup(
         "Click",
         "requests >= 2.24.0",
     ],
-    packages=["csdap_bulk_download"],
+    packages=setuptools.find_packages(),
     entry_points={
         "console_scripts": [
             "csdap-bulk-download = csdap_bulk_download.cli:cli",
