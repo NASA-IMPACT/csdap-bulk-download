@@ -11,7 +11,6 @@ import click
 from .csdap import CsdapClient
 from .logger import setup_logger
 
-import logging
 
 logger = logging.getLogger()
 
