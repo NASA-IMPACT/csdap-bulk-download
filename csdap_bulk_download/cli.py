@@ -1,8 +1,7 @@
-from concurrent.futures import thread
 from datetime import datetime
 from io import TextIOWrapper
 from pathlib import Path
-from queue import Queue
+from typing import List
 import concurrent.futures
 import csv
 import logging
@@ -17,18 +16,10 @@ import logging
 logger = logging.getLogger()
 
 
-def run_sleep():
-    import requests
-
-    logger.info("Running")
-    response = requests.get("https://httpbin.org/delay/5")
-    logger.info("Done")
-    return "Done!"
-
-
 @click.command()
-@click.argument("input-csv", type=click.File("r"), nargs=1)
+@click.argument("input-csvs", type=click.File("r"), nargs=-1)
 @click.option(
+    "-o",
     "--out-dir",
     type=click.Path(file_okay=False, writable=True, resolve_path=True, path_type=Path),
     default=lambda: f"Order_Downloads_{datetime.now().strftime('%Y-%m-%d-%H%M')}",
@@ -61,15 +52,19 @@ def run_sleep():
     type=int,
     show_default="Number of processors on the machine, multiplied by 5",
 )
-@click.option("-v", "--verbose", count=True)
+@click.option("scene_ids", "-id", "--scene_id", multiple=True, type=str.lower)
+@click.option("asset_types", "-t", "--asset_type", multiple=True, type=str.lower)
+@click.option("verbosity", "-v", "--verbose", count=True)
 def cli(
-    input_csv: TextIOWrapper,
+    input_csvs: List[TextIOWrapper],
     out_dir: Path,
     csdap_api_url: str,
     username: str,
     password: str,
-    verbose: int,
+    verbosity: int,
     max_workers: int,
+    scene_ids: List[str],
+    asset_types: List[str],
 ):
     """
     This is a simple script to download order assets from the CSDAP. It makes the
@@ -88,23 +83,40 @@ def cli(
     - filtervalue (optional): This is the value in the filtercolumn that you want to filter by.
     """
 
-    setup_logger(verbose)
+    setup_logger(verbosity)
 
     csdap = CsdapClient(csdap_api_url)
     token = csdap.get_auth_token(username, password)
-    click.echo(token)
 
     with concurrent.futures.ThreadPoolExecutor(
         max_workers=max_workers, thread_name_prefix="CsdapDownload"
     ) as executor:
-        future_to_row = {
-            executor.submit(csdap.download_file, **row, out_dir=out_dir, token=token): row
-            for row in csv.DictReader(input_csv)
-        }
+        future_to_path = {}
+        for input_csv in input_csvs:
+            for row in csv.DictReader(input_csv):
+                path = Path(row["order_id"]) / row["scene_id"] / row["asset_type"]
+                
+                # Filter rows
+                if scene_ids and row["scene_id"].lower() not in scene_ids:
+                    logger.debug("Skipping %s, does not pass scene_id filter", path)
+                    continue
+                if asset_types and row["asset_type"].lower() not in asset_types:
+                    logger.debug("Skipping %s, does not pass asset_type filter", path)
+                    continue
 
-        for future in concurrent.futures.as_completed(future_to_row):
-            row = future_to_row[future]
+                # Schedule work
+                future = executor.submit(
+                    csdap.download_file,
+                    path=path,
+                    out_dir=out_dir,
+                    token=token,
+                )
+                future_to_path[future] = path
+
+        # Log results
+        for future in concurrent.futures.as_completed(future_to_path):
+            path = future_to_path[future]
             try:
-                logger.info(f"Wrote {future.result()}")
+                logger.info("%s: %s", path, future.result())
             except Exception as exc:
-                logger.exception("%r generated an exception: %s" % (row, exc))
+                logger.exception("%s generated an exception: %s" % (path, exc))

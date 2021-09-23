@@ -13,18 +13,6 @@ from requests.models import Response
 logger = logging.getLogger()
 
 
-def _follow_redirects(response: Response):
-    print(response, response.headers, )
-    response.raise_for_status()
-    if response.status_code in [301, 302, 307]:
-        return _follow_redirects(
-            requests.get(
-                response.headers["Location"], stream=True, allow_redirects=False
-            )
-        )
-    return response
-
-
 @dataclass
 class CsdapClient:
     csdap_api_url: str
@@ -78,31 +66,25 @@ class CsdapClient:
     def download_file(
         self,
         out_dir: Path,
-        order_id: int,
-        scene_id: str,
-        asset_type: str,
+        path: Path,
         token: str,
         **_,
     ) -> Path:
-        identifier = f"{order_id}/{scene_id}/{asset_type}"
-
         # Prep file_dir
-        file_dir = out_dir / identifier
+        file_dir = out_dir / path
         file_dir.mkdir(parents=True, exist_ok=True)
 
         # Download
-        logger.debug(f"Downloading {identifier}...")
-        response = _follow_redirects(
-            requests.get(
-                f"{self.csdap_api_url}/v1/download/{identifier}",
-                stream=True,
-                headers={"authorization": f"Bearer {token}"},
-                allow_redirects=False,
-            )
+        logger.debug("Downloading %s...", path)
+        response = requests.get(
+            f"{self.csdap_api_url}/v1/download/{path}",
+            stream=True,
+            headers={"authorization": f"Bearer {token}"},
         )
+        response.raise_for_status()
 
         # Determine filepath
-        filename = asset_type
+        filename = path.name
         logger.debug(f"headers {response.headers}")
         disposition = response.headers.get("Content-Disposition")
         if disposition:
