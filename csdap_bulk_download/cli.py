@@ -37,6 +37,7 @@ logger = logging.getLogger()
     envvar="EDL_USER",
     prompt=True,
     show_default="Environment variable 'EDL_USER' or prompt",
+    help="Earthdata Login username",
 )
 @click.option(
     "password",
@@ -45,15 +46,31 @@ logger = logging.getLogger()
     prompt=True,
     hide_input=True,
     show_default="Environment variable 'EDL_PASS' or prompt",
+    help="Earthdata Login password",
 )
 @click.option(
     "-w",
     "--max-workers",
     type=int,
     show_default="Number of processors on the machine, multiplied by 5",
+    help="Number of concurrent downloads",
 )
-@click.option("scene_ids", "-id", "--scene_id", multiple=True, type=str.lower)
-@click.option("asset_types", "-t", "--asset_type", multiple=True, type=str.lower)
+@click.option(
+    "scene_ids",
+    "-id",
+    "--scene_id",
+    multiple=True,
+    type=str.lower,
+    help="Filter by scene_ids",
+)
+@click.option(
+    "asset_types",
+    "-t",
+    "--asset_type",
+    multiple=True,
+    type=str.lower,
+    help="Filter by asset_type",
+)
 @click.option("verbosity", "-v", "--verbose", count=True)
 def cli(
     input_csvs: List[TextIOWrapper],
@@ -67,20 +84,22 @@ def cli(
     asset_types: List[str],
 ):
     """
-    This is a simple script to download order assets from the CSDAP. It makes the
-    following assumptions:
+    The CSDAP Bulk Download tool intends to make it easy to download many
+    assets from an order placed within the CSDAP system.
+    
+    \b
+    The Assets CSV must contain a header row with the following columns:
+      - order_id
+      - scene_id
+      - asset_type
 
-    - the Assets CSV contains the following columns:
-        - order_id
-        - scene_id
-        - asset_type
-    -A user has the option to filter the csv file and only download a subset of files based on scene_id or asset_type.
+    A user has the option to filter the csv file and only download a subset
+    of files based on scene_id or asset_type.
 
-    NOTE: a user is only granted access to download each file once.
+    Note that a user is only granted access to download each file once.
 
-    Running the script: Arguments
-    - filtercolumn (optional): This is the column in the csv file that you want to filter by.
-    - filtervalue (optional): This is the value in the filtercolumn that you want to filter by.
+    For more information on CSDAP, please visit https://csdap.earthdata.nasa.gov.
+    For support, contact csdap@uah.edu.
     """
 
     setup_logger(verbosity)
@@ -95,7 +114,7 @@ def cli(
         for input_csv in input_csvs:
             for row in csv.DictReader(input_csv):
                 path = Path(row["order_id"]) / row["scene_id"] / row["asset_type"]
-                
+
                 # Filter rows
                 if scene_ids and row["scene_id"].lower() not in scene_ids:
                     logger.debug("Skipping %s, does not pass scene_id filter", path)
