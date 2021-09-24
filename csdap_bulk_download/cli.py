@@ -49,8 +49,8 @@ logger = logging.getLogger(__name__)
     help="Earthdata Login password",
 )
 @click.option(
-    "-w",
-    "--max-workers",
+    "-c",
+    "--concurrency",
     type=int,
     show_default="Number of processors on the machine, multiplied by 5",
     help="Number of concurrent downloads",
@@ -79,14 +79,14 @@ def cli(
     username: str,
     password: str,
     verbosity: int,
-    max_workers: int,
+    concurrency: int,
     scene_ids: List[str],
     asset_types: List[str],
 ):
     """
     The CSDAP Bulk Download tool intends to make it easy to download many
     assets from an order placed within the CSDAP system.
-    
+
     \b
     The Assets CSV must contain a header row with the following columns:
       - order_id
@@ -108,7 +108,7 @@ def cli(
     token = csdap.get_auth_token(username, password)
 
     with concurrent.futures.ThreadPoolExecutor(
-        max_workers=max_workers, thread_name_prefix="CsdapDownload"
+        max_workers=concurrency, thread_name_prefix="CsdapDownload"
     ) as executor:
         future_to_path = {}
         for input_csv in input_csvs:
