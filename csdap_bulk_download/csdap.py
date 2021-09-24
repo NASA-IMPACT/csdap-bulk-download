@@ -1,5 +1,6 @@
 import logging
 import re
+import textwrap
 from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
@@ -7,6 +8,8 @@ from urllib.parse import parse_qs, urlparse
 import requests
 from requests.auth import HTTPBasicAuth
 from tqdm import tqdm
+
+from .exceptions import AuthError
 
 
 logger = logging.getLogger(__name__)
@@ -27,12 +30,17 @@ class CsdapClient:
             params={"redirect_uri": "script"},
             allow_redirects=False,
         )
-        assert response.status_code in (
-            302,
-            307,
-        ), f"Expected redirect, got {response.status_code}"
-        edl_url = response.headers["Location"]
-        assert urlparse(edl_url).path.startswith("/oauth/authorize")
+        if response.status_code not in (302, 307):
+            raise AuthError(
+                f"Expected API to respond with a redirect, got {response.status_code}"
+            )
+
+        edl_url = response.headers.get("Location", "")
+        redirect_path = urlparse(edl_url).path
+        if not redirect_path.startswith("/oauth/authorize"):
+            raise AuthError(
+                f"Expected redirect to /oauth/authorize, got {redirect_path}"
+            )
 
         # Authenticate with EDL
         logger.debug("Authenticating with Earthdata Login...")
@@ -41,17 +49,26 @@ class CsdapClient:
             auth=HTTPBasicAuth(username, password),
             allow_redirects=False,
         )
-        response.raise_for_status()
-        assert response.status_code in (
-            302,
-            307,
-        ), f"Expected redirect, got {response.status_code}"
+        if not response.ok:
+            raise AuthError(
+                "\n".join(
+                    [
+                        "Failed to authenticate with Earthdata Login.",
+                        f"Response from server:",
+                        textwrap.indent(response.text.strip(), prefix=" " * 4),
+                        "HINT: check username and password.",
+                    ]
+                )
+            )
+
+        if response.status_code not in (302, 307):
+            raise AuthError(
+                f"Expected Earthdata Login to respond with a redirect, got {response.status_code}"
+            )
 
         querystring = parse_qs(urlparse(response.headers["Location"]).query)
         if querystring.get("error"):
-            err_msg = querystring["error_msg"]
-            logger.error(f"Failed to authenticate: {err_msg}")
-            exit(1)
+            raise AuthError(querystring["error_msg"])
 
         code = querystring["code"]
 
@@ -104,11 +121,11 @@ class CsdapClient:
             unit_scale=True,
             desc=f"Downloading {path}",
             dynamic_ncols=True,
-            leave=False
+            leave=False,
         )
         with filepath.open("wb") as f:
             for chunk in progress_bar:
                 f.write(chunk)
                 progress_bar.update(len(chunk))
-        
+
         return f"Downloaded file to {filepath}"
