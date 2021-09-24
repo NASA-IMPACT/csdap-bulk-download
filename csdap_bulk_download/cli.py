@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 @click.command()
-@click.argument("input-csvs", type=click.File("r"), nargs=-1)
+@click.argument("input-csvs", type=click.File("r"), nargs=-1, required=True)
 @click.option(
     "-o",
     "--out-dir",
