@@ -33,6 +33,7 @@ logger = logging.getLogger(__name__)
 )
 @click.option(
     "username",
+    "-u",
     "--edl-username",
     envvar="EDL_USER",
     prompt=True,
@@ -41,6 +42,7 @@ logger = logging.getLogger(__name__)
 )
 @click.option(
     "password",
+    "-pw",
     "--edl-password",
     envvar="EDL_PASS",
     prompt=True,
