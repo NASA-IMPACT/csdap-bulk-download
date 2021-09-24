@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
     "-u",
     "--edl-username",
     envvar="EDL_USER",
-    prompt=True,
+    prompt="Earthdata Login username",
     show_default="Environment variable 'EDL_USER' or prompt",
     help="Earthdata Login username",
 )
@@ -45,7 +45,7 @@ logger = logging.getLogger(__name__)
     "-pw",
     "--edl-password",
     envvar="EDL_PASS",
-    prompt=True,
+    prompt="Earthdata Login password",
     hide_input=True,
     show_default="Environment variable 'EDL_PASS' or prompt",
     help="Earthdata Login password",
