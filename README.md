@@ -4,8 +4,7 @@ Authorized users submit data requests through the Smallsat Data Explorer (SDX) f
 
 Note: Download links can only be downloaded once. However, user downloads are logged so that if there is a failure during download (e.g., loss of internet), executing this script again will start downloading files that were not previously downloaded.
 
-![Example usages](./.docs/example.svg)
-<img src="./.docs/example.svg">
+![Example usage](./.docs/example.svg)
 
 ## Installation
 
