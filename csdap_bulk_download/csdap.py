@@ -1,5 +1,4 @@
 import logging
-import os
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -7,10 +6,10 @@ from urllib.parse import parse_qs, urlparse
 
 import requests
 from requests.auth import HTTPBasicAuth
-from requests.models import Response
+from tqdm import tqdm
 
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -85,7 +84,6 @@ class CsdapClient:
 
         # Determine filepath
         filename = path.name
-        logger.debug(f"headers {response.headers}")
         disposition = response.headers.get("Content-Disposition")
         if disposition:
             disposition_filename = re.findall("filename=(.+)", disposition)
@@ -95,12 +93,22 @@ class CsdapClient:
 
         # Skip if already exists
         if filepath.exists():
-            logger.warn("File at %s already exists, skipping...", filepath)
-            return filepath
+            return f"Skipped, file exists at {filepath}"
 
         # Write to local disk
+        stream = response.iter_content(chunk_size=8192)
+        progress_bar = tqdm(
+            stream,
+            total=int(response.headers.get("content-size", 0)),
+            unit="iB",
+            unit_scale=True,
+            desc=f"Downloading {path}",
+            dynamic_ncols=True,
+            leave=False
+        )
         with filepath.open("wb") as f:
-            for chunk in response.iter_content(chunk_size=8192):
+            for chunk in progress_bar:
                 f.write(chunk)
-
-        return filepath
+                progress_bar.update(len(chunk))
+        
+        return f"Downloaded file to {filepath}"

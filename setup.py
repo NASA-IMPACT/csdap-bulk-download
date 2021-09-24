@@ -11,6 +11,7 @@ setuptools.setup(
     url="https://github.com/nasa-impact/csdap-bulk-download",
     install_requires=[
         "Click",
+        "tqdm",
         "requests >= 2.24.0",
     ],
     packages=setuptools.find_packages(),
