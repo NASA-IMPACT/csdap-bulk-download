@@ -7,12 +7,13 @@ import csv
 import logging
 
 import click
+from tqdm.contrib.logging import logging_redirect_tqdm
 
 from .csdap import CsdapClient
 from .logger import setup_logger
 
 
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
 
 
 @click.command()
@@ -132,9 +133,15 @@ def cli(
                 future_to_path[future] = path
 
         # Log results
-        for future in concurrent.futures.as_completed(future_to_path):
-            path = future_to_path[future]
-            try:
-                logger.info("%s: %s", path, future.result())
-            except Exception as exc:
-                logger.exception("%s generated an exception: %s" % (path, exc))
+        with logging_redirect_tqdm():
+            for future in concurrent.futures.as_completed(future_to_path):
+                path = future_to_path[future]
+                try:
+                    logger.info("%s: %s", path, future.result())
+                except Exception as exc:
+                    if verbosity > 1:
+                        logger.exception("%s generated an exception: %s" % (path, exc))
+                    else:
+                        logger.warn("%s: Failed to download", path)
+
+        click.echo("Complete.")

@@ -9,5 +9,9 @@ def setup_logger(verbosity: int):
     app_logger.setLevel(logging.DEBUG if verbosity else logging.INFO)
 
     logging.basicConfig(
-        format="%(asctime)s:%(module)s:%(threadName)s:%(levelname)s:%(message)s",
+        format=(
+            "%(asctime)s:%(name)s:%(threadName)s:%(levelname)s:%(message)s"
+            if verbosity > 1
+            else "%(asctime)s:%(message)s"
+        )
     )
