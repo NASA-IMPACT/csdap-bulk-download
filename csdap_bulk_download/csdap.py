@@ -2,7 +2,7 @@ import logging
 import re
 import textwrap
 from dataclasses import dataclass
-from pathlib import Path
+from pathlib import PurePath
 from urllib.parse import parse_qs, urlparse
 
 import requests
@@ -81,11 +81,11 @@ class CsdapClient:
 
     def download_file(
         self,
-        out_dir: Path,
-        path: Path,
+        out_dir: PurePath,
+        path: PurePath,
         token: str,
         **_,
-    ) -> Path:
+    ) -> PurePath:
         # Prep file_dir
         file_dir = out_dir / path
         file_dir.mkdir(parents=True, exist_ok=True)

@@ -1,6 +1,6 @@
 from datetime import datetime
 from io import TextIOWrapper
-from pathlib import Path
+from pathlib import PurePath
 from typing import List
 import concurrent.futures
 import csv
@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 @click.option(
     "-o",
     "--out-dir",
-    type=click.Path(file_okay=False, writable=True, resolve_path=True, path_type=Path),
+    type=click.Path(file_okay=False, writable=True, resolve_path=True, path_type=PurePath),
     default=lambda: f"Order_Downloads_{datetime.now().strftime('%Y-%m-%d-%H%M')}",
     show_default=f"Order_Downloads_{datetime.now().strftime('%Y-%m-%d-%H%M')}",
 )
@@ -76,7 +76,7 @@ logger = logging.getLogger(__name__)
 @click.option("verbosity", "-v", "--verbose", count=True)
 def cli(
     input_csvs: List[TextIOWrapper],
-    out_dir: Path,
+    out_dir: PurePath,
     csdap_api_url: str,
     username: str,
     password: str,
@@ -115,7 +115,7 @@ def cli(
         future_to_path = {}
         for input_csv in input_csvs:
             for row in csv.DictReader(input_csv):
-                path = Path(row["order_id"]) / row["scene_id"] / row["asset_type"]
+                path = PurePath(row["order_id"]) / row["scene_id"] / row["asset_type"]
 
                 # Filter rows
                 if scene_ids and row["scene_id"].lower() not in scene_ids:
