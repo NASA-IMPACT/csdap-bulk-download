@@ -21,7 +21,8 @@ logger = logging.getLogger(__name__)
 @click.option(
     "-o",
     "--out-dir",
-    type=click.Path(file_okay=False, writable=True, resolve_path=True, path_type=Path),
+    type=click.Path(file_okay=False, writable=True,
+                    resolve_path=True, path_type=Path),
     default=lambda: f"Order_Downloads_{datetime.now().strftime('%Y-%m-%d-%H%M')}",
     show_default=f"Order_Downloads_{datetime.now().strftime('%Y-%m-%d-%H%M')}",
 )
@@ -91,7 +92,7 @@ def cli(
 
     \b
     The Assets CSV must contain a header row with the following columns:
-      - order_id
+      - collection_id
       - scene_id
       - asset_type
 
@@ -115,14 +116,17 @@ def cli(
         future_to_path = {}
         for input_csv in input_csvs:
             for row in csv.DictReader(input_csv):
-                path = Path(row["order_id"]) / row["scene_id"] / row["asset_type"]
+                path = Path(row["collection_id"]) / \
+                    row["scene_id"] / row["asset_type"]
 
                 # Filter rows
                 if scene_ids and row["scene_id"].lower() not in scene_ids:
-                    logger.debug("Skipping %s, does not pass scene_id filter", path)
+                    logger.debug(
+                        "Skipping %s, does not pass scene_id filter", path)
                     continue
                 if asset_types and row["asset_type"].lower() not in asset_types:
-                    logger.debug("Skipping %s, does not pass asset_type filter", path)
+                    logger.debug(
+                        "Skipping %s, does not pass asset_type filter", path)
                     continue
 
                 # Schedule work
@@ -142,7 +146,8 @@ def cli(
                     logger.info("%s: %s", path, future.result())
                 except Exception as exc:
                     if verbosity > 1:
-                        logger.exception("%s generated an exception: %s" % (path, exc))
+                        logger.exception(
+                            "%s generated an exception: %s" % (path, exc))
                     else:
                         logger.warn("%s: Failed to download", path)
 
