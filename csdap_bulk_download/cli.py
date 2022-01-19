@@ -116,18 +116,12 @@ def cli(
         future_to_path = {}
         for input_csv in input_csvs:
             for row in csv.DictReader(input_csv):
-                # Handle legacy CSVs from orders-based system
-                if "order_id" in row:
-                    if row['asset_type'].lower().startswith('spire_'):
-                        collection_id = 'spire'
-                    elif row['scene_id'].lower() in ('set', 'utm'):
-                        collection_id = 'earthdem'
-                    else:
-                        collection_id = 'planet'
-                    row.setdefault('collection_id', collection_id)
-
-                path = Path(row["collection_id"]) / \
-                    row["scene_id"] / row["asset_type"]
+                version = 1 if "order_id" in row else 2
+                if version == 1:
+                    logger.warn("Detected legacy CSV.")
+                base = Path(row["order_id"] if version == 1 else row["collection_id"]) 
+                path = base / row["scene_id"] / row["asset_type"]
+                    
 
                 # Filter rows
                 if scene_ids and row["scene_id"].lower() not in scene_ids:
@@ -145,6 +139,7 @@ def cli(
                     path=path,
                     out_dir=out_dir,
                     token=token,
+                    endpoint_version=version
                 )
                 future_to_path[future] = path
 
