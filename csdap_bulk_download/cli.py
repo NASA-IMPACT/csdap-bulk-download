@@ -116,6 +116,16 @@ def cli(
         future_to_path = {}
         for input_csv in input_csvs:
             for row in csv.DictReader(input_csv):
+                # Handle legacy CSVs from orders-based system
+                if "order_id" in row:
+                    if row['asset_type'].lower().startswith('spire_'):
+                        collection_id = 'spire'
+                    elif row['scene_id'].lower() in ('set', 'utm'):
+                        collection_id = 'earthdem'
+                    else:
+                        collection_id = 'planet'
+                    row.setdefault('collection_id', collection_id)
+
                 path = Path(row["collection_id"]) / \
                     row["scene_id"] / row["asset_type"]
 
