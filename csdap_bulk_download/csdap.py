@@ -65,7 +65,19 @@ class CsdapClient:
             raise AuthError(
                 f"Expected Earthdata Login to respond with a redirect, got {response.status_code}"
             )
-
+        
+        if response.status_code == 302 and response.text.find('resolution_url'):
+            start = response.text.find('resolution_url')+len('resolution_url')+1
+            end = response.text.find('\"', start)
+            raise AuthError(
+                "\n".join(
+                    [
+                       "Authorization required for this application, please authorize by visiting the resolution url",
+                       response.text[start:end],
+                    ]
+                )
+            )
+            
         querystring = parse_qs(urlparse(response.headers["Location"]).query)
         if querystring.get("error"):
             raise AuthError(querystring["error_msg"])
