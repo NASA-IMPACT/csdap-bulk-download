@@ -84,7 +84,7 @@ class CsdapClient:
         out_dir: Path,
         path: Path,
         token: str,
-        endpoint_version: int
+        endpoint_version: int,
         **_,
     ) -> Path:
         # Prep file_dir
