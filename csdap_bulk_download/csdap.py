@@ -84,6 +84,7 @@ class CsdapClient:
         out_dir: Path,
         path: Path,
         token: str,
+        endpoint_version: int,
         **_,
     ) -> Path:
         # Prep file_dir
@@ -92,8 +93,9 @@ class CsdapClient:
 
         # Download
         logger.debug("Downloading %s...", path)
+        base_path = f"v{endpoint_version}/download"
         response = requests.get(
-            f"{self.csdap_api_url}/v1/download/{path.as_posix()}",
+            f"{self.csdap_api_url}/{base_path}/{path.as_posix()}",
             stream=True,
             headers={"authorization": f"Bearer {token}"},
         )
