@@ -26,3 +26,13 @@ Install into a virtual environment:
 ```sh
 pip install -e .
 ```
+
+### Formatting & Linting
+
+To maintain common code style, please format and lint all code contributions:
+
+```sh
+pip3 install -r requirements-dev.txt
+black csdap_bulk_download  # Format code
+flake8  # Lint code
+```
