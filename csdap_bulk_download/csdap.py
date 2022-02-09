@@ -95,7 +95,7 @@ class CsdapClient:
         logger.debug("Downloading %s...", path)
         base_path = f"v{endpoint_version}/download"
         response = requests.get(
-            f"{self.csdap_api_url}/{base_path}/{path}",
+            f"{self.csdap_api_url}/{base_path}/{path.as_posix()}",
             stream=True,
             headers={"authorization": f"Bearer {token}"},
         )
