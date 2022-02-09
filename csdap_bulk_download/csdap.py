@@ -54,7 +54,7 @@ class CsdapClient:
                 "\n".join(
                     [
                         "Failed to authenticate with Earthdata Login.",
-                        f"Response from server:",
+                        "Response from server:",
                         textwrap.indent(response.text.strip(), prefix=" " * 4),
                         "HINT: check username and password.",
                     ]
@@ -63,7 +63,8 @@ class CsdapClient:
 
         if response.status_code not in (302, 307):
             raise AuthError(
-                f"Expected Earthdata Login to respond with a redirect, got {response.status_code}"
+                "Expected Earthdata Login to respond with a redirect, "
+                f"got {response.status_code}"
             )
 
         querystring = parse_qs(urlparse(response.headers["Location"]).query)
