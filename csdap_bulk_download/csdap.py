@@ -54,7 +54,7 @@ class CsdapClient:
                 "\n".join(
                     [
                         "Failed to authenticate with Earthdata Login.",
-                        f"Response from server:",
+                        "Response from server:",
                         textwrap.indent(response.text.strip(), prefix=" " * 4),
                         "HINT: check username and password.",
                     ]
@@ -63,7 +63,8 @@ class CsdapClient:
 
         if response.status_code not in (302, 307):
             raise AuthError(
-                f"Expected Earthdata Login to respond with a redirect, got {response.status_code}"
+                "Expected Earthdata Login to respond with a redirect, "
+                f"got {response.status_code}"
             )
 
         querystring = parse_qs(urlparse(response.headers["Location"]).query) 
@@ -96,7 +97,7 @@ class CsdapClient:
         out_dir: Path,
         path: Path,
         token: str,
-        endpoint_version: int
+        endpoint_version: int,
         **_,
     ) -> Path:
         # Prep file_dir
@@ -107,7 +108,7 @@ class CsdapClient:
         logger.debug("Downloading %s...", path)
         base_path = f"v{endpoint_version}/download"
         response = requests.get(
-            f"{self.csdap_api_url}/{base_path}/{path}",
+            f"{self.csdap_api_url}/{base_path}/{path.as_posix()}",
             stream=True,
             headers={"authorization": f"Bearer {token}"},
         )
