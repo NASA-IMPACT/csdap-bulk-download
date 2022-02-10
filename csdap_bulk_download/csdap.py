@@ -68,6 +68,23 @@ class CsdapClient:
             )
 
         querystring = parse_qs(urlparse(response.headers["Location"]).query)
+        if (
+            querystring.get("error")
+            and response.status_code == 302
+            and "resolution_url" in response.text
+        ):
+            start = response.text.find("resolution_url") + len("resolution_url") + 1
+            end = response.text.find('"', start)
+            raise AuthError(
+                "\n".join(
+                    [
+                        "Authorization required for this application,",
+                        "please authorize by visiting the resolution url",
+                        response.text[start:end],
+                    ]
+                )
+            )
+
         if querystring.get("error"):
             raise AuthError(querystring["error_msg"])
 
