@@ -78,7 +78,8 @@ class CsdapClient:
             raise AuthError(
                 "\n".join(
                     [
-                        "Authorization required for this application, please authorize by visiting the resolution url",
+                        "Authorization required for this application,",
+                        "please authorize by visiting the resolution url",
                         response.text[start:end],
                     ]
                 )
