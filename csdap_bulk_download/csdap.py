@@ -1,6 +1,7 @@
 import logging
 import re
 import textwrap
+import json
 from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
@@ -117,12 +118,10 @@ class CsdapClient:
             stream=True,
             headers={"authorization": f"Bearer {token}"},
         )
-        try:
-            response.raise_for_status()
-        except:  # noqa: E722
+        if not response.ok:
             try:
                 msg = response.json()["detail"]
-            except:  # noqa: E722
+            except (KeyError, json.JSONDecodeError):
                 msg = response.text
             return f"Failed to download. {msg}"
 
