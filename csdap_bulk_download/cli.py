@@ -114,11 +114,13 @@ def cli(
     ) as executor:
         future_to_path = {}
         for input_csv in input_csvs:
+            api_version = 2
             for row in csv.DictReader(input_csv):
-                version = 1 if "order_id" in row else 2
-                if version == 1:
+                if "order_id" in row and api_version == 2:
                     logger.warn("Detected legacy CSV.")
-                base = Path(row["order_id"] if version == 1 else row["collection_id"])
+                    api_version = 1
+                
+                base = Path(row["order_id"] if api_version == 1 else row["collection_id"])
                 path = base / row["scene_id"] / row["asset_type"]
 
                 # Filter rows
@@ -135,7 +137,7 @@ def cli(
                     path=path,
                     out_dir=out_dir,
                     token=token,
-                    endpoint_version=version,
+                    endpoint_version=api_version,
                 )
                 future_to_path[future] = path
 
