@@ -119,8 +119,10 @@ def cli(
                 if "order_id" in row and api_version == 2:
                     logger.warn("Detected legacy CSV.")
                     api_version = 1
-                
-                base = Path(row["order_id"] if api_version == 1 else row["collection_id"])
+
+                base = Path(
+                    row["order_id"] if api_version == 1 else row["collection_id"]
+                )
                 path = base / row["scene_id"] / row["asset_type"]
 
                 # Filter rows
