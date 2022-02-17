@@ -117,7 +117,14 @@ class CsdapClient:
             stream=True,
             headers={"authorization": f"Bearer {token}"},
         )
-        response.raise_for_status()
+        try:
+            response.raise_for_status()
+        except:  # noqa: E722
+            try:
+                msg = response.json()["detail"]
+            except:  # noqa: E722
+                msg = response.text
+            return f"Failed to download. {msg}"
 
         # Determine filepath
         filename = path.name
