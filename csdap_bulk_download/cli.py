@@ -111,10 +111,23 @@ def cli(
 
     with concurrent.futures.ThreadPoolExecutor(
         max_workers=concurrency, thread_name_prefix="CsdapDownload"
-    ) as executor:
+    ) as executor, logging_redirect_tqdm():
+
         logger.debug(
-            "Creating threadpool with max_workers of %s", executor._max_workers)
+            "Creating threadpool with max_workers of %s", executor._max_workers
+        )
         future_to_path = {}
+
+        def log_results(future):
+            path = future_to_path.pop(future)
+            try:
+                logger.info("%s: %s", path, future.result())
+            except Exception as exc:
+                if verbosity > 1:
+                    logger.exception("%s generated an exception: %s" % (path, exc))
+                else:
+                    logger.warn("%s: Failed to download", path)
+
         for input_csv in input_csvs:
             api_version = 2
             for row in csv.DictReader(input_csv):
@@ -145,16 +158,25 @@ def cli(
                 )
                 future_to_path[future] = path
 
-        # Log results
-        with logging_redirect_tqdm():
-            for future in concurrent.futures.as_completed(future_to_path):
-                path = future_to_path.pop(future)
-                try:
-                    logger.info("%s: %s", path, future.result())
-                except Exception as exc:
-                    if verbosity > 1:
-                        logger.exception("%s generated an exception: %s" % (path, exc))
-                    else:
-                        logger.warn("%s: Failed to download", path)
+                # To avoid the memory overhead of scheduling the entire CSV as futures,
+                # we wait will for some futures to complete before scheduling more
+                if len(future_to_path) >= 2 * executor._max_workers:
+                    logger.debug(
+                        "Waiting for some downloads to finish before continuing to "
+                        "process CSV rows..."
+                    )
+                    done, not_done = concurrent.futures.wait(
+                        future_to_path, return_when=concurrent.futures.FIRST_COMPLETED
+                    )
+                    for future in done:
+                        log_results(future)
+
+        # Log outstanding futures
+        logger.debug(
+            "All CSVs processed, waiting for remaining %s downloads to complete",
+            len(future_to_path),
+        )
+        for future in concurrent.futures.as_completed(future_to_path):
+            log_results(future)
 
         click.echo("Complete.")
