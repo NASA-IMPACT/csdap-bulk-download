@@ -112,6 +112,8 @@ def cli(
     with concurrent.futures.ThreadPoolExecutor(
         max_workers=concurrency, thread_name_prefix="CsdapDownload"
     ) as executor:
+        logger.debug(
+            "Creating threadpool with max_workers of %s", executor._max_workers)
         future_to_path = {}
         for input_csv in input_csvs:
             api_version = 2
@@ -146,7 +148,7 @@ def cli(
         # Log results
         with logging_redirect_tqdm():
             for future in concurrent.futures.as_completed(future_to_path):
-                path = future_to_path[future]
+                path = future_to_path.pop(future)
                 try:
                     logger.info("%s: %s", path, future.result())
                 except Exception as exc:
