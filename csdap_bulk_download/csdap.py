@@ -1,4 +1,5 @@
 import logging
+import os
 import re
 import textwrap
 import json
@@ -108,6 +109,9 @@ class CsdapClient:
     ) -> Path:
         # Prep file_dir
         file_dir = out_dir / path
+        # Skip if already exists
+        if file_dir.exists() and len(os.listdir(file_dir)):
+            return f"Skipped, files exist in {file_dir}"
         file_dir.mkdir(parents=True, exist_ok=True)
 
         # Download
@@ -133,10 +137,6 @@ class CsdapClient:
             if disposition_filename:
                 filename = disposition_filename[0]
         filepath = file_dir / filename
-
-        # Skip if already exists
-        if filepath.exists():
-            return f"Skipped, file exists at {filepath}"
 
         # Write to local disk
         stream = response.iter_content(chunk_size=8192)
