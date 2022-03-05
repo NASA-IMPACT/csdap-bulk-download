@@ -1,6 +1,7 @@
 import logging
 import os
 import re
+import shutil
 import textwrap
 import json
 from dataclasses import dataclass
@@ -117,41 +118,37 @@ class CsdapClient:
         # Download
         logger.debug("Downloading %s...", path)
         base_path = f"v{endpoint_version}/download"
-        response = requests.get(
-            f"{self.csdap_api_url}/{base_path}/{path.as_posix()}",
-            stream=True,
-            headers={"authorization": f"Bearer {token}"},
-        )
-        if not response.ok:
-            try:
-                msg = response.json()["detail"]
-            except (KeyError, json.JSONDecodeError):
-                msg = response.text
-            return f"Failed to download. {msg}"
+        url = f"{self.csdap_api_url}/{base_path}/{path.as_posix()}"
+        headers = {"authorization": f"Bearer {token}"}
+        with requests.get(url, stream=True, headers=headers) as response:
+            if not response.ok:
+                try:
+                    msg = response.json()["detail"]
+                except (KeyError, json.JSONDecodeError):
+                    msg = response.text
+                return f"Failed to download. {msg}"
 
-        # Determine filepath
-        filename = path.name
-        disposition = response.headers.get("Content-Disposition")
-        if disposition:
-            disposition_filename = re.findall("filename=(.+)", disposition)
-            if disposition_filename:
-                filename = disposition_filename[0]
-        filepath = file_dir / filename
+            # Determine filepath
+            filename = path.name
+            disposition = response.headers.get("Content-Disposition")
+            if disposition:
+                disposition_filename = re.findall("filename=(.+)", disposition)
+                if disposition_filename:
+                    filename = disposition_filename[0]
+            filepath = file_dir / filename
 
-        # Write to local disk
-        stream = response.iter_content(chunk_size=8192)
-        progress_bar = tqdm(
-            stream,
-            total=int(response.headers.get("content-size", 0)),
-            unit="iB",
-            unit_scale=True,
-            desc=f"Downloading {path}",
-            dynamic_ncols=True,
-            leave=False,
-        )
-        with filepath.open("wb") as f:
-            for chunk in progress_bar:
-                f.write(chunk)
-                progress_bar.update(len(chunk))
+            # Write to local disk
+            tqdm_attrs = dict(
+                total=int(response.headers.get("content-size", 0)),
+                unit="iB",
+                unit_scale=True,
+                desc=f"Downloading {filepath}",
+                dynamic_ncols=True,
+                leave=False,
+            )
+            with filepath.open("wb") as f, tqdm.wrapattr(
+                response.raw, "read", **tqdm_attrs
+            ) as r_raw:
+                shutil.copyfileobj(r_raw, f)
 
         return f"Downloaded file to {filepath}"
