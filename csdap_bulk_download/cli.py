@@ -123,7 +123,7 @@ def cli(
             try:
                 logger.info("%s: %s", path, future.result())
             except Exception as exc:
-                if verbosity > 1:
+                if verbosity:
                     logger.exception("%s generated an exception: %s" % (path, exc))
                 else:
                     logger.warn("%s: Failed to download", path)
