@@ -157,6 +157,7 @@ def cli(
                     endpoint_version=api_version,
                 )
                 future_to_path[future] = path
+                future.add_done_callback(log_results)
 
                 # To avoid the memory overhead of scheduling the entire CSV as futures,
                 # we wait will for some futures to complete before scheduling more
@@ -165,18 +166,17 @@ def cli(
                         "Waiting for some downloads to finish before continuing to "
                         "process CSV rows..."
                     )
-                    done, not_done = concurrent.futures.wait(
+                    concurrent.futures.wait(
                         future_to_path, return_when=concurrent.futures.FIRST_COMPLETED
                     )
-                    for future in done:
-                        log_results(future)
 
         # Log outstanding futures
         logger.debug(
             "All CSVs processed, waiting for remaining %s downloads to complete",
             len(future_to_path),
         )
-        for future in concurrent.futures.as_completed(future_to_path):
-            log_results(future)
+        concurrent.futures.wait(
+            future_to_path, return_when=concurrent.futures.ALL_COMPLETED
+        )
 
         click.echo("Complete.")
