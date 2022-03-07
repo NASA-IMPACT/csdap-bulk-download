@@ -142,7 +142,7 @@ class CsdapClient:
                 total=int(response.headers.get("content-size", 0)),
                 unit="iB",
                 unit_scale=True,
-                desc=f"Downloading {filepath}",
+                desc=f"Downloading {filepath.name}",
                 dynamic_ncols=True,
                 leave=False,
             )
