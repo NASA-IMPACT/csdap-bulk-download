@@ -11,7 +11,7 @@ from tqdm.contrib.logging import logging_redirect_tqdm
 
 from .csdap import CsdapClient
 from .logger import setup_logger
-
+from . import __version__
 
 logger = logging.getLogger(__name__)
 
@@ -74,6 +74,7 @@ logger = logging.getLogger(__name__)
     help="Filter by asset_type",
 )
 @click.option("verbosity", "-v", "--verbose", count=True)
+@click.version_option(version=__version__, message="%(version)s")
 def cli(
     input_csvs: List[TextIOWrapper],
     out_dir: Path,

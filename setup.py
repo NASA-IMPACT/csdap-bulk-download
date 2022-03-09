@@ -2,7 +2,6 @@ import setuptools
 
 setuptools.setup(
     name="csdap_bulk_download",
-    version="1.0",
     description="Bulk download tool for CSDAP orders.",
     author="NASA Impact",
     author_email="csdap@uah.edu",
