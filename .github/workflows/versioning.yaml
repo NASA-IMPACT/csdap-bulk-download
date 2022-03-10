@@ -4,8 +4,8 @@ on:
   - push
 
 jobs:
-  run-linters:
-    name: Run linters
+  validate-tag:
+    name: Validate tag
     runs-on: ubuntu-latest
 
     steps:
