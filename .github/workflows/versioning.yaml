@@ -1,0 +1,36 @@
+name: Version Management
+
+on:
+  - push
+
+jobs:
+  run-linters:
+    name: Run linters
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.8
+
+      - name: Get version
+        id: getVersion
+        run: echo ::set-output name=version::$(python -c "from csdap_bulk_download import __version__; print(__version__)")
+
+      - uses: mukunku/tag-exists-action@v1.0.0
+        id: checkTag
+        with: 
+          tag: ${{ steps.getVersion.outputs.version }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Found existing tag
+        if: ${{ steps.checkTag.outputs.exists }}
+        uses: actions/github-script@v3
+        with:
+          script: |
+              core.setFailed('Tag ${{ steps.getVersion.outputs.version }} already exists on this repo.')
