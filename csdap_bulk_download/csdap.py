@@ -109,6 +109,8 @@ class CsdapClient:
         **_,
     ) -> Path:
         # Prep file_dir
+        if isinstance(out_dir, bytes):
+            out_dir = Path(out_dir.decode())
         file_dir = out_dir / path
         # Skip if already exists
         if file_dir.exists() and len(os.listdir(file_dir)):
