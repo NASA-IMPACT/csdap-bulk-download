@@ -30,7 +30,7 @@ class CsdapClient:
         # Get URL to EDL
         response = requests.get(
             f"{self.auth_endpoint}/",
-            params={"redirect_uri": "script"},
+            params={"redirect_uri": self.csdap_api_url},
             allow_redirects=False,
         )
         if response.status_code not in (302, 307):
