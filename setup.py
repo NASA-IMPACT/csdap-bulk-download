@@ -5,7 +5,7 @@ setuptools.setup(
     version="1.0.1",
     description="Bulk download tool for CSDAP orders.",
     author="NASA Impact",
-    author_email="csdap@uah.edu",
+    author_email="support-csda@nasa.gov",
     maintainer="Anthony Lukach",
     maintainer_email="anthony@developmentseed.org",
     url="https://github.com/nasa-impact/csdap-bulk-download",
