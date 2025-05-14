@@ -109,10 +109,12 @@ def cli(
     csdap = CsdapClient(csdap_api_url)
     token = csdap.get_auth_token(username, password)
 
-    with concurrent.futures.ThreadPoolExecutor(
-        max_workers=concurrency, thread_name_prefix="CsdapDownload"
-    ) as executor, logging_redirect_tqdm():
-
+    with (
+        concurrent.futures.ThreadPoolExecutor(
+            max_workers=concurrency, thread_name_prefix="CsdapDownload"
+        ) as executor,
+        logging_redirect_tqdm(),
+    ):
         logger.debug(
             "Creating threadpool with max_workers of %s", executor._max_workers
         )

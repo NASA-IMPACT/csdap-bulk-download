@@ -146,9 +146,10 @@ class CsdapClient:
                 dynamic_ncols=True,
                 leave=False,
             )
-            with filepath.open("wb") as f, tqdm.wrapattr(
-                response.raw, "read", **tqdm_attrs
-            ) as r_raw:
+            with (
+                filepath.open("wb") as f,
+                tqdm.wrapattr(response.raw, "read", **tqdm_attrs) as r_raw,
+            ):
                 shutil.copyfileobj(r_raw, f)
 
         return f"Downloaded file to {filepath}"
