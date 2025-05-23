@@ -13,29 +13,29 @@ logger = logging.getLogger(__name__)
 
 METHOD = Literal["GET"] | Literal["POST"]
 
-API_URL_STAGING = "https://csdap-staging.ds.io/api"
-API_URL_PRODUCTION = "https://csdap.earthdata.nasa.gov/api"
+STAGING_URL = "https://csdap-staging.ds.io"
+PRODUCTION_URL = "https://csdap.earthdata.nasa.gov"
 
 
 class CsdaClient:
     @classmethod
     def open(
-        cls, username: str, password: str, api_url: str = API_URL_STAGING
+        cls, username: str, password: str, url: str = PRODUCTION_URL
     ) -> CsdaClient:
         """Opens a logged-in CSDA client."""
-        client = CsdaClient(api_url)
+        client = CsdaClient(url)
         client.login(username, password)
         return client
 
-    def __init__(self, api_url: str = API_URL_STAGING) -> None:
+    def __init__(self, url: str = PRODUCTION_URL) -> None:
         """Creates a new, un-logged-in CSDA client.
 
         Use `login` to get an auth token.
         """
         self.session = Session()
-        self.api_url = api_url
+        self.url = url
 
-    def request_auth(
+    def _request_auth(
         self,
         path: str,
         method: METHOD,
@@ -46,7 +46,7 @@ class CsdaClient:
     ) -> Response:
         """Sends a request to an auth endpoint."""
         return self.request(
-            f"/v1/auth/{path.lstrip('/')}",
+            f"/api/v1/auth/{path.lstrip('/')}",
             method,
             params=params,
             data=data,
@@ -67,7 +67,7 @@ class CsdaClient:
 
         This is useful to re-use an auth token, e.g. retrieved via `CsdaClient.login()`.
         """
-        url = self.api_url.rstrip("/") + "/" + path.lstrip("/")
+        url = self.url.rstrip("/") + "/" + path.lstrip("/")
         response = self.session.request(
             method=method,
             url=url,
@@ -86,10 +86,10 @@ class CsdaClient:
 
         Needless to say, you shouldn't be saving your username or password in code.
         """
-        response = self.request_auth(
+        response = self._request_auth(
             "/",
             method="GET",
-            params={"redirect_uri": self.api_url},
+            params={"redirect_uri": self.url},
             allow_redirects=False,
         )
         if response.status_code not in (302, 307):
@@ -140,7 +140,7 @@ class CsdaClient:
 
         logger.debug("Exchanging authorization code for access token...")
         code = querystring["code"]
-        response = self.request_auth("/token", method="POST", data={"code": code})
+        response = self._request_auth("/token", method="POST", data={"code": code})
         token = response.json()["access_token"]
 
         self.session.headers["Authorization"] = f"Bearer: {token}"
