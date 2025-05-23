@@ -1,17 +1,16 @@
+import concurrent.futures
+import csv
+import logging
 from datetime import datetime
 from io import TextIOWrapper
 from pathlib import Path
 from typing import List
-import concurrent.futures
-import csv
-import logging
 
 import click
 from tqdm.contrib.logging import logging_redirect_tqdm
 
 from .csdap import CsdapClient
 from .logger import setup_logger
-
 
 logger = logging.getLogger(__name__)
 

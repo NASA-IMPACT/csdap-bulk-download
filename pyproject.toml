@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = ["click>=8.2.0", "requests>=2.32.3", "tqdm>=4.67.1"]
 
-[scripts]
+[project.scripts]
 csdap-bulk-download = "csdap_bulk_download.cli:cli"
 
 [project.urls]
