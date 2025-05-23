@@ -4,10 +4,7 @@ TODO
 
 ## Usage
 
-```sh
-python -m pip install git+https://github.com/NASA-IMPACT/csdap-bulk-download
-csdap-bulk-download --help
-```
+TODO
 
 ## Development
 
