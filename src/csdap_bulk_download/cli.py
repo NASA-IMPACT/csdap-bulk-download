@@ -1,17 +1,16 @@
+import concurrent.futures
+import csv
+import logging
 from datetime import datetime
 from io import TextIOWrapper
 from pathlib import Path
 from typing import List
-import concurrent.futures
-import csv
-import logging
 
 import click
 from tqdm.contrib.logging import logging_redirect_tqdm
 
 from .csdap import CsdapClient
 from .logger import setup_logger
-
 
 logger = logging.getLogger(__name__)
 
@@ -109,10 +108,12 @@ def cli(
     csdap = CsdapClient(csdap_api_url)
     token = csdap.get_auth_token(username, password)
 
-    with concurrent.futures.ThreadPoolExecutor(
-        max_workers=concurrency, thread_name_prefix="CsdapDownload"
-    ) as executor, logging_redirect_tqdm():
-
+    with (
+        concurrent.futures.ThreadPoolExecutor(
+            max_workers=concurrency, thread_name_prefix="CsdapDownload"
+        ) as executor,
+        logging_redirect_tqdm(),
+    ):
         logger.debug(
             "Creating threadpool with max_workers of %s", executor._max_workers
         )

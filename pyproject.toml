@@ -1,2 +1,16 @@
-[tool.black]
-line-length = 88
+[project]
+name = "csdap-bulk-download"
+version = "1.0.1"
+description = "Bulk download tool for CSDA orders"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = ["click>=8.2.0", "requests>=2.32.3", "tqdm>=4.67.1"]
+
+[project.scripts]
+csdap-bulk-download = "csdap_bulk_download.cli:cli"
+
+[project.urls]
+repository = "https://github.com/NASA-IMPACT/csdap-bulk-download"
+
+[dependency-groups]
+dev = ["ruff>=0.11.9"]
