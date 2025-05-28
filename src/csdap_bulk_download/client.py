@@ -62,6 +62,8 @@ class CsdaClient:
         data: dict[str, Any] | None = None,
         allow_redirects: bool = True,
         auth: AuthBase | None = None,
+        json: dict[str, Any] | None = None,
+        stream: bool | None = None,
     ) -> Response:
         """Sends a request.
 
@@ -75,6 +77,8 @@ class CsdaClient:
             data=data,
             allow_redirects=allow_redirects,
             auth=auth,
+            json=json,
+            stream=stream,
         )
         response.raise_for_status()
         return response
@@ -143,4 +147,4 @@ class CsdaClient:
         response = self._request_auth("/token", method="POST", data={"code": code})
         token = response.json()["access_token"]
 
-        self.session.headers["Authorization"] = f"Bearer: {token}"
+        self.session.headers["Authorization"] = f"Bearer {token}"
