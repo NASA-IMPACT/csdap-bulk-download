@@ -1,4 +1,4 @@
-from csdap_bulk_download.client import CsdaClient
+from csda_client.client import CsdaClient
 
 
 def test_init() -> None:
