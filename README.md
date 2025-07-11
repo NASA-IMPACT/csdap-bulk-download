@@ -11,7 +11,7 @@ python -m pip install git+https://github.com/nasa-impact/csda-client
 See our notebooks for examples of how to use the client:
 
 - [General usage](./docs/client.ipynb)
-- [Downloading](./docs/download.ipynb)
+- [Data Search and Download](./docs/download.ipynb)
 
 ## Issues
 
