@@ -1,13 +1,13 @@
 [project]
-name = "csdap-bulk-download"
+name = "csda-client"
 version = "1.0.1"
-description = "Bulk download tool for CSDA orders"
+description = "API client for CSDA services"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = ["requests>=2.32.3"]
 
 [project.urls]
-repository = "https://github.com/NASA-IMPACT/csdap-bulk-download"
+repository = "https://github.com/NASA-IMPACT/csda-client"
 
 [dependency-groups]
 dev = [
